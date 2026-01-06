@@ -1,0 +1,25 @@
+{
+	"compilerOptions": {
+		"types": ["bun"],
+		"target": "ES2022",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"strict": true,
+		"declaration": true,
+		"outDir": "dist",
+		"rootDir": ".",
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"noEmit": true,
+		"paths": {
+			"@/*": ["./main/*"],
+			"shared/*": ["./shared/*"]
+		},
+		"baseUrl": "."
+	},
+	"include": ["main/**/*", "scripts/**/*", "shared/**/*"],
+	"exclude": ["node_modules", "dist", "webview"]
+}
