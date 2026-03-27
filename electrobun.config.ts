@@ -1,3 +1,5 @@
+import type { ElectrobunConfig } from "electrobun/bun";
+
 export default {
 	app: {
 		name: "product",
@@ -7,27 +9,29 @@ export default {
 	build: {
 		useAsar: true,
 		bun: {
-			entrypoint: "main/index.ts",
+			entrypoint: "src/bun/index.ts",
 			external: [],
 		},
-		views: {
-			// Empty - views are built by postBuild script via Vite
-		},
+		views: {},
 		copy: {
-			// HTML is copied, but JS/CSS are built by Vite in postBuild
-			"assets/": "views/assets/",
+			"dist/index.html": "views/mainview/index.html",
+			"dist/assets/": "views/mainview/assets/",
 		},
+		watchIgnore: ["dist/**"],
 		mac: {
 			codesign: false,
 			notarize: false,
-			bundleCEF: true,
+			bundleCEF: false,
 			entitlements: {},
 		},
-	},
-	scripts: {
-		postBuild: "./scripts/post-build.ts",
+		linux: {
+			bundleCEF: false,
+		},
+		win: {
+			bundleCEF: false,
+		},
 	},
 	release: {
-		bucketUrl: "",
+		baseUrl: "",
 	},
-};
+} satisfies ElectrobunConfig;

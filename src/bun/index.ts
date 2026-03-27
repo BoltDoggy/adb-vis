@@ -1,6 +1,19 @@
 import { ApplicationMenu, BrowserView, BrowserWindow } from "electrobun/bun";
 import type { MainRPC } from "shared/rpc";
 
+// HMR: use Vite dev server if running, otherwise use bundled views
+async function getMainViewUrl(): Promise<string> {
+	try {
+		const response = await fetch("http://localhost:5173");
+		if (response.ok) {
+			return "http://localhost:5173";
+		}
+	} catch {
+		// Vite dev server not running, use bundled views
+	}
+	return "views://mainview/index.html";
+}
+
 // Application menu
 ApplicationMenu.setApplicationMenu([
 	{
@@ -43,7 +56,7 @@ const mainRPC = BrowserView.defineRPC<MainRPC>({
 // Create main window
 const mainWindow = new BrowserWindow({
 	title: "product",
-	url: "views://main/index.html",
+	url: await getMainViewUrl(),
 	frame: {
 		width: 1200,
 		height: 800,
@@ -63,4 +76,4 @@ mainWindow.webview.on("dom-ready", () => {
 	console.log("Webview DOM ready");
 });
 
-console.log("product app app started");
+console.log("product app started");

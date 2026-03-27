@@ -4,24 +4,19 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
 	plugins: [react()],
-	root: "webview",
-	base: "./",
+	root: "src/mainview",
 	build: {
-		outDir: "../dist/webview",
+		outDir: "../../dist",
 		emptyOutDir: true,
-		rollupOptions: {
-			input: path.resolve(__dirname, "webview/index.html"),
-			output: {
-				entryFileNames: "index.js",
-				chunkFileNames: "[name].js",
-				assetFileNames: "[name].[ext]",
-			},
-		},
 	},
 	resolve: {
 		alias: {
-			"@": path.resolve(__dirname, "webview"),
+			"@": path.resolve(__dirname, "src/mainview"),
 			shared: path.resolve(__dirname, "shared"),
 		},
+	},
+	server: {
+		port: 5173,
+		strictPort: true,
 	},
 });

@@ -21,7 +21,7 @@
 		}
 	},
 	"files": {
-		"include": ["main/**/*", "webview/**/*", "shared/**/*", "scripts/**/*"],
+		"include": ["src/**/*", "shared/**/*"],
 		"ignore": ["dist", "node_modules"]
 	}
 }

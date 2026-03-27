@@ -15,7 +15,7 @@ export function App() {
 		<div className="min-h-screen flex flex-col items-center justify-center gap-6 p-8">
 			<h1 className="text-4xl font-bold">{greeting}</h1>
 			<p className="text-muted-foreground">
-				Electrobun + React + Vite + Tailwind CSS 4 + shadcn/ui
+				Electrobun + React + Vite + Tailwind CSS 4 + shadcn/ui.
 			</p>
 			<div className="flex gap-4">
 				<Button>Primary Button</Button>
