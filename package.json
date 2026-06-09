@@ -1,5 +1,5 @@
 {
-  "name": "@product/app",
+  "name": "@adbvis/app",
   "version": "0.1.0",
   "scripts": {
     "start": "vite build && electrobun dev",
@@ -12,7 +12,9 @@
     "lint:fix": "biome check --write ."
   },
   "dependencies": {
-    "electrobun": "^1.16.0"
+    "electrobun": "^1.16.0",
+    "lucide-react": "^1.17.0",
+    "radix-ui": "^1.5.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

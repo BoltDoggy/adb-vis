@@ -1,5 +1,21 @@
 import { ApplicationMenu, BrowserView, BrowserWindow } from "electrobun/bun";
 import type { MainRPC } from "shared/rpc";
+import {
+	getDevices,
+	getDeviceDetails,
+	executeShell,
+	takeScreenshot,
+	listApps,
+	installApp,
+	uninstallApp,
+	pushFile,
+	pullFile,
+	getLogcat,
+	rebootDevice,
+	getScreenSize,
+	startLogcatStream,
+	stopLogcatStream,
+} from "./adb";
 
 // HMR: use Vite dev server if running, otherwise use bundled views
 async function getMainViewUrl(): Promise<string> {
@@ -18,7 +34,7 @@ async function getMainViewUrl(): Promise<string> {
 ApplicationMenu.setApplicationMenu([
 	{
 		submenu: [
-			{ label: "About product", role: "about" },
+			{ label: "About ADB Vis", role: "about" },
 			{ type: "separator" },
 			{ label: "Quit", role: "quit", accelerator: "q" },
 		],
@@ -35,15 +51,67 @@ ApplicationMenu.setApplicationMenu([
 			{ role: "selectAll" },
 		],
 	},
+	{
+		label: "View",
+		submenu: [
+			{ label: "Reload", role: "reload", accelerator: "r" },
+			{ label: "Toggle DevTools", role: "toggleDevTools", accelerator: "Alt+Command+I" },
+		],
+	},
 ]);
 
 // Define RPC handlers for webview communication
 const mainRPC = BrowserView.defineRPC<MainRPC>({
-	maxRequestTime: 5000,
+	maxRequestTime: 30000,
 	handlers: {
 		requests: {
 			ping: () => "pong",
-			getGreeting: () => "Greetings from the Bun side!",
+			getDevices: async () => {
+				return await getDevices();
+			},
+			getDeviceDetails: async ({ serial }) => {
+				return await getDeviceDetails(serial);
+			},
+			executeShell: async ({ serial, command }) => {
+				return await executeShell(serial, command);
+			},
+			takeScreenshot: async ({ serial }) => {
+				return await takeScreenshot(serial);
+			},
+			listApps: async ({ serial, systemOnly }) => {
+				return await listApps(serial, systemOnly);
+			},
+			installApp: async ({ serial, apkPath }) => {
+				return await installApp(serial, apkPath);
+			},
+			uninstallApp: async ({ serial, packageName }) => {
+				return await uninstallApp(serial, packageName);
+			},
+			pushFile: async ({ serial, localPath, remotePath }) => {
+				return await pushFile(serial, localPath, remotePath);
+			},
+			pullFile: async ({ serial, remotePath, localPath }) => {
+				return await pullFile(serial, remotePath, localPath);
+			},
+			getLogcat: async ({ serial, lines, filter }) => {
+				return await getLogcat(serial, lines, filter);
+			},
+			startLogcatStream: async ({ serial, grep, tagOnly }) => {
+				await startLogcatStream(serial, (log) => {
+					mainRPC.send("logcatStream", { serial, log });
+				}, grep, tagOnly);
+				return { success: true };
+			},
+			stopLogcatStream: async ({ serial }) => {
+				stopLogcatStream(serial);
+				return { success: true };
+			},
+			rebootDevice: async ({ serial, mode }) => {
+				return await rebootDevice(serial, mode);
+			},
+			getScreenSize: async ({ serial }) => {
+				return await getScreenSize(serial);
+			},
 		},
 		messages: {
 			log: ({ msg }) => {
@@ -55,11 +123,11 @@ const mainRPC = BrowserView.defineRPC<MainRPC>({
 
 // Create main window
 const mainWindow = new BrowserWindow({
-	title: "product",
+	title: "ADB Vis - Android Debug Bridge Visual Tool",
 	url: await getMainViewUrl(),
 	frame: {
-		width: 1200,
-		height: 800,
+		width: 1400,
+		height: 900,
 		x: 100,
 		y: 100,
 	},
@@ -76,4 +144,4 @@ mainWindow.webview.on("dom-ready", () => {
 	console.log("Webview DOM ready");
 });
 
-console.log("product app started");
+console.log("ADB Vis app started");

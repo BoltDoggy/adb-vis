@@ -2,8 +2,8 @@ import type { ElectrobunConfig } from "electrobun/bun";
 
 export default {
 	app: {
-		name: "product",
-		identifier: "dev.product.app",
+		name: "adbvis",
+		identifier: "com.demo.adbvis",
 		version: "0.1.0",
 	},
 	build: {
