@@ -106,6 +106,10 @@ dist/assets/      → views/mainview/assets/
 | `biome.json` | 代码检查与格式化规则 |
 | `postcss.config.mjs` | PostCSS + Tailwind CSS 4 插件 |
 
+## 相关文章
+
+- [ADB Vis 开发手记](https://juejin.cn/spost/7649003647238062090)
+
 ## 许可证
 
 MIT
