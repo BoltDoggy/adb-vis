@@ -1,175 +1,111 @@
-# Electrobun Starter
+# ADB Vis
 
-An opinionated starter template for building desktop applications with [Electrobun](https://electrobun.dev/).
+一款基于 [Electrobun](https://electrobun.dev/) 构建的 Android Debug Bridge（ADB）可视化桌面工具。
 
-**Note:** Electrobun is NOT Electron. Do not use Electron APIs or patterns. See the [Electrobun docs](https://blackboard.sh/electrobun/docs/) for API reference.
+![ADB Vis 截图](./screenshots/app.png)
 
-## Create a New Project
+## 功能特性
 
-**Option A — GitHub template** (requires the repo to be marked as a template in Settings):
+- **设备管理** — 自动发现并列出已连接的 Android 设备，显示连接状态与 ADB 路径
+- **实时截图** — 一键截取设备屏幕并预览
+- **Shell 终端** — 在图形界面中执行 ADB Shell 命令
+- **日志查看器** — 可视化过滤与查看 `logcat`，支持按标签、进程、日志级别筛选
+- **应用管理** — 查看与管理设备上的应用包
 
-```bash
-gh repo create my-app --template mattgi/electrobun-starter --clone
-cd my-app
-bun run scripts/init.ts myapp
-bun install
-```
+## 技术栈
 
-**Option B — degit** (no git history):
+- **React 19** + TypeScript 构建 webview UI
+- **Vite 6** 提供快速开发与热更新
+- **Tailwind CSS 4** 构建界面样式
+- **shadcn/ui**（New York 风格，neutral 主题）
+- **Biome** 负责代码检查与格式化
+- **Bun** 作为运行时与包管理器
+- 主进程与 webview 之间通过 `shared/rpc.ts` 实现类型安全的 RPC 通信
 
-```bash
-bunx degit mattgi/electrobun-starter my-app
-cd my-app
-bun run scripts/init.ts myapp
-bun install
-```
-
-The init script renames `product` to your app name across all config files. Pass `--identifier` to customize the bundle ID:
-
-```bash
-bun run scripts/init.ts myapp --identifier com.mycompany.myapp
-```
-
-## What's Included
-
-- **React 19** with TypeScript for the webview UI
-- **Vite 6** for fast development builds with HMR support
-- **Tailwind CSS 4** for styling
-- **shadcn/ui** pre-configured (New York style, neutral base)
-- **Biome** for linting and formatting
-- **Type-safe RPC** between main process and webview via shared schema
-- **Bun** as the runtime and package manager
-
-## Project Structure
+## 项目结构
 
 ```
 src/
-  bun/            # Main process (Bun runtime)
-    index.ts      # App entry point, window creation, RPC handlers, menu
-  mainview/       # Webview UI (React + Vite)
-    components/   # React components (including shadcn/ui)
-    lib/          # Utilities (cn(), electrobun RPC client)
-    index.html    # HTML entry point
-    index.tsx     # React root
-    index.css     # Tailwind + theme tokens
-shared/           # Shared types between main and webview
-  rpc.ts          # RPC schema definition (type-safe contract)
+  bun/            # 主进程（Bun 运行时）
+    index.ts      # 应用入口：窗口创建、RPC 处理、菜单
+  mainview/       # Webview UI（React + Vite）
+    components/   # React 组件（含 shadcn/ui）
+    lib/          # 工具函数（cn()、electrobun RPC 客户端）
+    index.html    # HTML 入口
+    index.tsx     # React 根节点
+    index.css     # Tailwind + 主题变量
+shared/
+  rpc.ts          # 主进程与 webview 共享的 RPC 类型契约
 ```
 
-## Development
+## 开发
 
-### Quick start
+### 快速启动
 
 ```bash
 bun install
-bun run start        # Build webview + launch app (one-shot)
+bun run start        # 构建 webview 并启动应用
 ```
 
-### Development with file watching
+### 监听模式开发
 
 ```bash
-bun run dev          # Electrobun watches source files, rebuilds + relaunches on change
+bun run dev          # Electrobun 监听源文件变化并自动重载
 ```
 
-### Development with Hot Module Replacement
+### 热模块替换（HMR）
 
 ```bash
-bun run dev:hmr      # Runs Vite dev server (port 5173) + Electrobun concurrently
+bun run dev:hmr      # 同时运行 Vite 开发服务器与 Electrobun
 ```
 
-The main process probes `localhost:5173` at startup. If the Vite dev server is running, it loads from there instead of the bundled `views://` assets. This gives you instant HMR for the webview UI without rebuilding the whole app.
+启动时主进程会探测 `localhost:5173`，如果 Vite 开发服务器正在运行，则直接加载开发环境资源，实现 webview UI 的即时热更新。
 
-### Linting
+### 代码检查
 
 ```bash
-bun run lint         # Check with Biome
-bun run lint:fix     # Auto-fix
+bun run lint         # Biome 检查
+bun run lint:fix     # 自动修复
 ```
 
-## Adding UI Components
+## CI / 云端构建
 
-This project uses [shadcn/ui](https://ui.shadcn.com/) with the New York style. To add components:
+本项目使用 GitHub Actions 在 macOS 云端运行器上自动构建：
 
-```bash
-bunx shadcn@latest add button
-bunx shadcn@latest add dialog
-```
+- 每次推送到 `main`/`master` 分支或发起 Pull Request 时触发构建
+- 每次推送 `v*` 标签时自动创建 GitHub Release 并上传安装包
+- 构建产物（`.app.tar.zst`、`.dmg`、更新清单）可在 Actions 运行详情页下载
 
-Components are placed in `src/mainview/components/ui/`. The `cn()` utility is at `src/mainview/lib/utils.ts`.
+工作流文件：`.github/workflows/build.yml`
 
-## RPC (Main <-> Webview Communication)
+## 构建与发布
 
-The type-safe RPC contract lives in `shared/rpc.ts`. Both sides import from it:
+Electrobun 使用 `--env` 区分构建渠道：
 
-- **Main process** (`src/bun/index.ts`): `BrowserView.defineRPC<MainRPC>()` — defines request handlers and message listeners
-- **Webview** (`src/mainview/lib/electrobun.ts`): `Electroview.defineRPC<MainRPC>()` — calls requests and sends messages
-
-To add a new RPC method:
-
-1. Add the type to `shared/rpc.ts` under `bun.requests` or `bun.messages`
-2. Implement the handler in `src/bun/index.ts`
-3. Call it from the webview via `electrobun.rpc.request("methodName", params)`
-
-## Building & Releasing
-
-Electrobun uses `--env` to distinguish build channels:
-
-| Channel | Command | Purpose |
+| 渠道 | 命令 | 用途 |
 |---|---|---|
-| `dev` | `bun run start` | Local development build, launches immediately |
-| `canary` | `bun run build:canary` | Pre-release testing build |
-| `stable` | `bun run build:stable` | Production release build |
+| `dev` | `bun run start` | 本地开发，直接启动 |
+| `canary` | `bun run build:canary` | 预发布测试构建 |
+| `stable` | `bun run build:stable` | 生产发布构建 |
 
-All build scripts run `vite build` first, then `electrobun build`. The `copy` rules in `electrobun.config.ts` map Vite output into the app bundle:
+所有构建脚本都会先执行 `vite build`，再执行 `electrobun build`。`electrobun.config.ts` 中的 `copy` 规则将 Vite 输出映射到应用包内：
 
 ```
 dist/index.html   → views/mainview/index.html
 dist/assets/      → views/mainview/assets/
 ```
 
-### Release & updates
+## 关键配置文件
 
-Electrobun has a built-in delta update system. Configure the release URL in `electrobun.config.ts`:
-
-```ts
-release: {
-  baseUrl: "https://your-cdn.com/releases/",
-}
-```
-
-Then build a stable release:
-
-```bash
-bun run build:stable
-```
-
-This generates the app bundle plus patch files for delta updates. Upload the build output to your `baseUrl` location. The app can check for and apply updates at runtime using the `Updater` API from `electrobun/bun`.
-
-### macOS code signing and notarization
-
-In `electrobun.config.ts`, set:
-
-```ts
-mac: {
-  codesign: true,
-  notarize: true,
-  entitlements: { /* ... */ },
-}
-```
-
-See the [Electrobun docs](https://blackboard.sh/electrobun/docs/) for details on certificates and notarization setup.
-
-### Cross-platform
-
-The config includes `mac`, `linux`, and `win` blocks. Set `bundleCEF: true` on each platform to include the Chromium Embedded Framework in the app bundle for distribution (set to `false` during development to save build time).
-
-## Key Config Files
-
-| File | Purpose |
+| 文件 | 说明 |
 |---|---|
-| `electrobun.config.ts` | App metadata, build settings, platform config, copy rules, release URL |
-| `vite.config.ts` | Vite build config, dev server port, path aliases |
-| `tsconfig.json` | TypeScript config covering both `src/` and `shared/` |
-| `components.json` | shadcn/ui CLI configuration |
-| `biome.json` | Linting and formatting rules |
-| `postcss.config.mjs` | PostCSS with Tailwind CSS 4 plugin |
+| `electrobun.config.ts` | 应用元数据、构建设置、平台配置、复制规则、发布 URL |
+| `vite.config.ts` | Vite 构建配置、开发服务器端口、路径别名 |
+| `tsconfig.json` | TypeScript 配置，覆盖 `src/` 与 `shared/` |
+| `components.json` | shadcn/ui CLI 配置 |
+| `biome.json` | 代码检查与格式化规则 |
+| `postcss.config.mjs` | PostCSS + Tailwind CSS 4 插件 |
+
+## 许可证
+
+MIT
