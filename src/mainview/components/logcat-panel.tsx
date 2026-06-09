@@ -451,11 +451,14 @@ export function LogcatPanel({ serial }: LogcatPanelProps) {
                   className="flex gap-2 hover:bg-white/5 px-3 rounded cursor-default items-start"
                   style={{ height: ITEM_HEIGHT }}
                 >
+                  <span className="text-gray-500 shrink-0 w-20 truncate" title={log.timestamp}>
+                    {log.timestamp ? log.timestamp.slice(6, 18) : ""}
+                  </span>
                   <span className={`shrink-0 w-4 text-center ${getLevelColor(log.level)} font-bold`}>
                     {log.level}
                   </span>
-                  <span className="text-cyan-400 shrink-0 w-32 truncate" title={log.tag}>{log.tag}</span>
-                  <span className="text-gray-500 shrink-0 w-12 text-right">{log.pid}</span>
+                  <span className="text-cyan-400 shrink-0 w-28 truncate" title={log.tag}>{log.tag}</span>
+                  <span className="text-gray-500 shrink-0 w-10 text-right">{log.pid}</span>
                   <span className={`${getLevelColor(log.level)} break-all flex-1 truncate`} title={log.message}>
                     {log.message}
                   </span>

@@ -184,7 +184,7 @@ export async function pullFile(serial: string, remotePath: string, localPath: st
 }
 
 export async function getLogcat(serial: string, lines = 200, filter?: string) {
-  const args = ["-s", serial, "logcat", "-d", "-t", String(lines), "-v", "brief"];
+  const args = ["-s", serial, "logcat", "-d", "-t", String(lines), "-v", "threadtime"];
   if (filter) {
     args.push(filter);
   }
@@ -295,7 +295,7 @@ export async function startLogcatStream(serial: string, onLog: LogHandler, grep?
   stopLogcatStream(serial);
 
   const grepLower = grep?.trim().toLowerCase();
-  const args = ["-s", serial, "logcat", "-v", "brief"];
+  const args = ["-s", serial, "logcat", "-v", "threadtime"];
 
   const abort = new AbortController();
   const proc = Bun.spawn([ADB_PATH, ...args], {
