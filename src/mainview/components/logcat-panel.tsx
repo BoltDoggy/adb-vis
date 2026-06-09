@@ -4,11 +4,38 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Trash2, ArrowDown, Search, Tag, X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  FileText,
+  Trash2,
+  ArrowDown,
+  Search,
+  Tag,
+  X,
+  Bookmark,
+  BookmarkPlus,
+} from "lucide-react";
 import type { LogEntry } from "shared/rpc";
 
 interface LogcatPanelProps {
   serial: string;
+}
+
+interface LogPreset {
+  id: string;
+  name: string;
+  searchText: string;
+  tagOnlySearch: boolean;
+  selectedLevels: string[];
+  selectedTags: string[];
 }
 
 const LOG_LEVELS = [
@@ -24,6 +51,7 @@ const LOG_LEVELS = [
 const ITEM_HEIGHT = 20;
 const BUFFER_ITEMS = 30;
 const MAX_TAGS_SHOWN = 12;
+const PRESETS_KEY = "adbvis-logcat-presets";
 
 function getLevelColor(level: string) {
   switch (level) {
@@ -37,6 +65,19 @@ function getLevelColor(level: string) {
   }
 }
 
+function loadPresets(): LogPreset[] {
+  try {
+    const raw = localStorage.getItem(PRESETS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePresets(presets: LogPreset[]) {
+  localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
+}
+
 export function LogcatPanel({ serial }: LogcatPanelProps) {
   const [allLogs, setAllLogs] = useState<LogEntry[]>([]);
   const [searchText, setSearchText] = useState("");
@@ -45,6 +86,9 @@ export function LogcatPanel({ serial }: LogcatPanelProps) {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [showAllTags, setShowAllTags] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const [presets, setPresets] = useState<LogPreset[]>(loadPresets);
+  const [presetName, setPresetName] = useState("");
+  const [presetDialogOpen, setPresetDialogOpen] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -87,7 +131,7 @@ export function LogcatPanel({ serial }: LogcatPanelProps) {
     };
   }, [serial, handleNewLog, startStream]);
 
-  // 搜索防抖重启流（搜索词或仅标签开关变化都触发）
+  // 搜索防抖重启流
   useEffect(() => {
     if (!serial) return;
     if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
@@ -190,8 +234,39 @@ export function LogcatPanel({ serial }: LogcatPanelProps) {
   };
 
   const clearTagFilter = () => setSelectedTags(new Set());
-
   const clearLogs = () => setAllLogs([]);
+
+  // 预设操作
+  const applyPreset = (preset: LogPreset) => {
+    setSearchText(preset.searchText);
+    setTagOnlySearch(preset.tagOnlySearch);
+    setSelectedLevels(new Set(preset.selectedLevels));
+    setSelectedTags(new Set(preset.selectedTags));
+  };
+
+  const addPreset = () => {
+    const name = presetName.trim();
+    if (!name) return;
+    const newPreset: LogPreset = {
+      id: crypto.randomUUID(),
+      name,
+      searchText,
+      tagOnlySearch,
+      selectedLevels: Array.from(selectedLevels),
+      selectedTags: Array.from(selectedTags),
+    };
+    const next = [...presets, newPreset];
+    setPresets(next);
+    savePresets(next);
+    setPresetName("");
+    setPresetDialogOpen(false);
+  };
+
+  const deletePreset = (id: string) => {
+    const next = presets.filter((p) => p.id !== id);
+    setPresets(next);
+    savePresets(next);
+  };
 
   if (!serial) {
     return (
@@ -214,10 +289,68 @@ export function LogcatPanel({ serial }: LogcatPanelProps) {
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
             </span>
           </CardTitle>
-          <Button variant="ghost" size="icon" onClick={clearLogs} title="清空">
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          <div className="flex gap-1">
+            {/* 保存预设 */}
+            <Dialog open={presetDialogOpen} onOpenChange={setPresetDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" title="保存当前筛选">
+                  <BookmarkPlus className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>保存筛选预设</DialogTitle>
+                  <DialogDescription>将当前的搜索词、级别和标签筛选保存为快捷预设。</DialogDescription>
+                </DialogHeader>
+                <Input
+                  value={presetName}
+                  onChange={(e) => setPresetName(e.target.value)}
+                  placeholder="预设名称，例如：只看 Error..."
+                  onKeyDown={(e) => e.key === "Enter" && addPreset()}
+                />
+                <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                  <div>搜索: {searchText || "(无)"} {tagOnlySearch ? "[仅标签]" : ""}</div>
+                  <div>级别: {Array.from(selectedLevels).join(", ")}</div>
+                  <div>标签: {selectedTags.size > 0 ? Array.from(selectedTags).join(", ") : "(全部)"}</div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={addPreset} disabled={!presetName.trim()}>保存</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <Button variant="ghost" size="icon" onClick={clearLogs} title="清空">
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
+
+        {/* 预设列表 */}
+        {presets.length > 0 && (
+          <div className="flex gap-1 mt-2 flex-wrap">
+            {presets.map((preset) => (
+              <div key={preset.id} className="flex items-center gap-0.5">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="h-6 text-[11px] px-2 rounded-r-none"
+                  onClick={() => applyPreset(preset)}
+                >
+                  <Bookmark className="w-3 h-3 mr-1" />
+                  {preset.name}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="h-6 w-6 p-0 rounded-l-none"
+                  onClick={() => deletePreset(preset.id)}
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* 搜索栏 */}
         <div className="flex gap-2 mt-3">
