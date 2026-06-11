@@ -283,7 +283,7 @@ export function LogcatPanel({ serial }: LogcatPanelProps) {
           <CardTitle className="text-lg flex items-center gap-2">
             <FileText className="w-5 h-5" />
             日志查看器
-            <Badge variant="secondary" className="text-xs">{totalCount}</Badge>
+            <Badge variant="secondary" className="text-xs font-mono">{totalCount}</Badge>
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
@@ -389,7 +389,7 @@ export function LogcatPanel({ serial }: LogcatPanelProps) {
               >
                 <span className={`w-2 h-2 rounded-full mr-1 ${level.color}`} />
                 {level.key}
-                <span className="ml-1 text-[10px] opacity-70">({count})</span>
+                <span className="ml-1 text-[10px] opacity-70 font-mono">({count})</span>
               </Button>
             );
           })}
@@ -427,7 +427,7 @@ export function LogcatPanel({ serial }: LogcatPanelProps) {
                     onClick={() => toggleTag(tag)}
                   >
                     {tag}
-                    <span className="ml-1 text-[10px] opacity-60">{count}</span>
+                    <span className="ml-1 text-[10px] opacity-60 font-mono">{count}</span>
                   </Button>
                 );
               })}
@@ -451,14 +451,14 @@ export function LogcatPanel({ serial }: LogcatPanelProps) {
                   className="flex gap-2 hover:bg-white/5 px-3 rounded cursor-default items-start"
                   style={{ height: ITEM_HEIGHT }}
                 >
-                  <span className="text-gray-500 shrink-0 w-20 truncate" title={log.timestamp}>
+                  <span className="text-gray-500 shrink-0 w-20 truncate font-mono" title={log.timestamp}>
                     {log.timestamp ? log.timestamp.slice(6, 18) : ""}
                   </span>
                   <span className={`shrink-0 w-4 text-center ${getLevelColor(log.level)} font-bold`}>
                     {log.level}
                   </span>
                   <span className="text-cyan-400 shrink-0 w-28 truncate" title={log.tag}>{log.tag}</span>
-                  <span className="text-gray-500 shrink-0 w-10 text-right">{log.pid}</span>
+                  <span className="text-gray-500 shrink-0 w-10 text-right font-mono">{log.pid}</span>
                   <span className={`${getLevelColor(log.level)} break-all flex-1 truncate`} title={log.message}>
                     {log.message}
                   </span>
