@@ -8,3 +8,4 @@ Resources/
 *.dylib
 icon.png
 icon.icns
+.DS_Store
